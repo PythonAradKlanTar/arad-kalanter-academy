@@ -3774,3 +3774,1209 @@ window.aradFinanceRefresh=function(){
 </script>
 
 <!-- END OF PART 8 -->
+
+<!-- ================= PART 9 ================= -->
+<style>
+.arad-dashboard {
+ direction:rtl;
+ color:white;
+ padding:25px;
+ font-family:Tahoma,sans-serif;
+}
+.arad-dashboard h1 {
+ color:#00eaff;
+ text-shadow:0 0 15px #00eaff;
+}
+.arad-dash-grid {
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+ gap:18px;
+ margin:25px 0;
+}
+.arad-stat-card,.arad-dash-panel {
+ padding:22px;
+ border:1px solid #00dfff55;
+ border-radius:18px;
+ background:rgba(10,25,55,.82);
+ backdrop-filter:blur(15px);
+ box-shadow:0 0 18px #00dfff18;
+}
+.arad-stat-card {
+ transition:.3s;
+}
+.arad-stat-card:hover {
+ transform:translateY(-5px);
+ box-shadow:0 0 25px #00dfff55;
+}
+.arad-stat-card h3,.arad-dash-panel h2 {
+ color:#00eaff;
+}
+.arad-stat-card strong {
+ display:block;
+ font-size:30px;
+ margin-top:12px;
+}
+.arad-progress-track {
+ background:#17243b;
+ height:13px;
+ border-radius:20px;
+ overflow:hidden;
+}
+.arad-progress-fill {
+ height:100%;
+ width:0;
+ background:linear-gradient(90deg,#007cf0,#00eaff);
+ box-shadow:0 0 12px #00eaff;
+ transition:width 1s;
+}
+.arad-dash-panel {
+ margin:20px 0;
+}
+.arad-dash-button {
+ background:linear-gradient(90deg,#007cf0,#00eaff);
+ color:#001323;
+ border:0;
+ padding:12px 20px;
+ border-radius:10px;
+ cursor:pointer;
+ font-weight:bold;
+ margin:8px 0;
+}
+.arad-last-lesson {
+ padding:14px;
+ border-radius:12px;
+ background:#101f38;
+ margin-top:12px;
+}
+@media(max-width:600px) {
+ .arad-dashboard {padding:12px}
+ .arad-dash-grid {grid-template-columns:1fr 1fr}
+ .arad-stat-card {padding:14px}
+ .arad-stat-card strong {font-size:23px}
+}
+</style>
+
+<section class="arad-dashboard" id="aradProfessionalDashboard">
+
+ <h1 id="aradDashWelcome">🚀 داشبورد دانش‌آموز</h1>
+ <p>به مرکز یادگیری آکادمی اراد خوش آمدی.</p>
+
+ <div class="arad-dash-grid">
+  <div class="arad-stat-card">
+   <h3>📚 کل دوره‌ها</h3>
+   <strong id="aradDashCourses">0</strong>
+  </div>
+  <div class="arad-stat-card">
+   <h3>✅ درس‌های تکمیل‌شده</h3>
+   <strong id="aradDashDone">0</strong>
+  </div>
+  <div class="arad-stat-card">
+   <h3>🏆 امتیاز دانش‌آموز</h3>
+   <strong id="aradDashPoints">0</strong>
+  </div>
+  <div class="arad-stat-card">
+   <h3>⏱ ساعات مطالعه</h3>
+   <strong id="aradDashHours">0</strong>
+  </div>
+ </div>
+
+ <div class="arad-dash-panel">
+  <h2>📈 پیشرفت کلی یادگیری</h2>
+  <div class="arad-progress-track">
+   <div class="arad-progress-fill" id="aradDashProgress"></div>
+  </div>
+  <p id="aradDashPercent">۰٪ تکمیل شده</p>
+ </div>
+
+ <div class="arad-dash-panel">
+  <h2>📖 آخرین درس</h2>
+  <div class="arad-last-lesson">
+   <strong id="aradLastLesson">هنوز درسی مطالعه نشده است.</strong>
+   <p id="aradLastCourse">دوره‌ای انتخاب نشده است.</p>
+  </div>
+ </div>
+
+ <div class="arad-dash-panel">
+  <h2>🥇 رتبه آموزشی</h2>
+  <p id="aradDashRank">🥉 تازه‌کار</p>
+  <p>با تکمیل درس‌ها و آزمون‌ها امتیاز بیشتری کسب کن.</p>
+ </div>
+
+ <button class="arad-dash-button"
+         onclick="aradRefreshDashboard()">
+  🔄 بروزرسانی داشبورد
+ </button>
+</section>
+
+<script>
+/* اتصال به دیتابیس محلی آکادمی */
+
+function aradSaveLastLesson(course,lesson) {
+ localStorage.setItem(
+  "aradLastLesson",
+  JSON.stringify({course,lesson})
+ );
+}
+
+function aradRefreshDashboard() {
+
+ if(typeof db==="undefined" || !db) return;
+
+ const courses=db.courses||[];
+ const progress=db.progress||{};
+ const currentUser=(db.users||[]).find(
+  u=>u.email===db.current
+ );
+
+ let totalLessons=0;
+ let completedLessons=0;
+
+ courses.forEach(course=>{
+  course.chapters.forEach(chapter=>{
+   totalLessons+=chapter.lessons.length;
+  });
+  completedLessons+=
+   (progress[course.id]||[]).length;
+ });
+
+ const percent=totalLessons
+  ?Math.round(completedLessons/totalLessons*100):0;
+
+ document.getElementById("aradDashCourses").textContent=
+  courses.length;
+
+ document.getElementById("aradDashDone").textContent=
+  completedLessons;
+
+ document.getElementById("aradDashProgress").style.width=
+  percent+"%";
+
+ document.getElementById("aradDashPercent").textContent=
+  percent+"٪ تکمیل شده";
+
+ const last=JSON.parse(
+  localStorage.getItem("aradLastLesson")||"null"
+ );
+
+ document.getElementById("aradLastLesson").textContent=
+  last?.lesson||"هنوز درسی مطالعه نشده است.";
+
+ document.getElementById("aradLastCourse").textContent=
+  last?.course||"دوره‌ای انتخاب نشده است.";
+
+ let points=completedLessons*10;
+
+ Object.values(db.scores||{}).forEach(scores=>{
+  scores.forEach(item=>{
+   points+=Math.round(
+    item.score/Math.max(item.total,1)*100
+   );
+  });
+ });
+
+ document.getElementById("aradDashPoints").textContent=
+  points;
+
+ const hours=Number(
+  localStorage.getItem("aradStudyHours")||0
+ );
+
+ document.getElementById("aradDashHours").textContent=
+  hours;
+
+ let rank="🥉 تازه‌کار";
+ if(points>=1000) rank="💎 استاد ارشد";
+ else if(points>=500) rank="🥇 حرفه‌ای";
+ else if(points>=200) rank="🥈 متوسط";
+ else if(points>=50) rank="🌟 فعال";
+
+ document.getElementById("aradDashRank").textContent=rank;
+
+ document.getElementById("aradDashWelcome").textContent=
+  currentUser
+   ?"🚀 داشبورد "+currentUser.name
+   :"🚀 داشبورد دانش‌آموز";
+}
+
+/* اتصال خودکار به صفحه درس قبلی */
+(function(){
+ const originalOpenLesson=window.openLesson;
+
+ if(typeof originalOpenLesson==="function"){
+  window.openLesson=function(id,ci,li){
+   const course=db.courses.find(x=>x.id===id);
+   if(course && course.chapters[ci]?.lessons[li]){
+    aradSaveLastLesson(
+     course.name,
+     course.chapters[ci].lessons[li].title
+    );
+   }
+   const result=originalOpenLesson.apply(this,arguments);
+   aradRefreshDashboard();
+   return result;
+  };
+ }
+})();
+
+/* اتصال به تکمیل درس */
+(function(){
+ const originalCompleteLesson=window.completeLesson;
+
+ if(typeof originalCompleteLesson==="function"){
+  window.completeLesson=function(){
+   const result=originalCompleteLesson.apply(this,arguments);
+   aradRefreshDashboard();
+   return result;
+  };
+})();
+
+aradRefreshDashboard();
+</script>
+
+<!-- END OF PART 9 -->
+
+/* ==========================================
+   ARAD ACADEMY - PART 10
+   ONLINE CODING PLAYGROUND
+========================================== */
+
+(function () {
+  if (document.getElementById("aradPlayground")) return;
+
+  const style = document.createElement("style");
+
+  style.textContent = `
+    #aradPlayground {
+      direction: rtl;
+      background: rgba(8, 15, 35, .96);
+      border: 1px solid #00eaff;
+      border-radius: 22px;
+      padding: 22px;
+      margin: 25px auto;
+      color: white;
+      max-width: 1100px;
+      box-shadow: 0 0 30px #00d9ff22;
+    }
+
+    #aradPlayground h2 {
+      color: #00eaff;
+      text-shadow: 0 0 15px #00eaff;
+    }
+
+    #aradPlayground textarea {
+      width: 100%;
+      min-height: 180px;
+      resize: vertical;
+      background: #050b19;
+      color: #65f7ff;
+      border: 1px solid #176c91;
+      border-radius: 12px;
+      padding: 15px;
+      font-family: monospace;
+      direction: ltr;
+      box-sizing: border-box;
+      margin: 8px 0;
+      font-size: 14px;
+    }
+
+    #aradPlayground button {
+      background: linear-gradient(90deg,#0879d8,#00d9ff);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin: 5px;
+      font-weight: bold;
+    }
+
+    #aradPlayground button:hover {
+      box-shadow: 0 0 18px #00d9ff;
+      transform: translateY(-2px);
+    }
+
+    #aradPlayground iframe {
+      width: 100%;
+      height: 350px;
+      background: white;
+      border: 2px solid #00d9ff;
+      border-radius: 12px;
+      margin-top: 12px;
+    }
+
+    #aradPlayground label {
+      display: block;
+      color: #8eeeff;
+      margin-top: 15px;
+    }
+  `;
+
+  document.head.appendChild(style);
+
+  const section = document.createElement("section");
+
+  section.id = "aradPlayground";
+
+  section.innerHTML = `
+    <h2>💻 آزمایشگاه کدنویسی اراد</h2>
+    <p>کد بنویس، اجرا کن و نتیجه را مشاهده کن.</p>
+
+    <label>HTML</label>
+    <textarea id="aradHTML" spellcheck="false"><h1>Hello ARAD Academy</h1>
+<p>My first project!</p>
+<button onclick="alert('Welcome!')">Click Me</button></textarea>
+
+    <label>CSS</label>
+    <textarea id="aradCSS" spellcheck="false">body {
+  background: #101a35;
+  color: white;
+  text-align: center;
+  font-family: Arial;
+  padding: 30px;
+}
+
+h1 {
+  color: #00eaff;
+}</textarea>
+
+    <label>JavaScript</label>
+    <textarea id="aradJS" spellcheck="false">console.log("ARAD ACADEMY");
+
+document.body.style.borderTop =
+  "5px solid cyan";</textarea>
+
+    <button id="aradRun">▶ اجرای پروژه</button>
+    <button id="aradClear">🗑 پاک کردن</button>
+    <button id="aradExample">📘 نمونه آماده</button>
+
+    <h3>🖥 خروجی پروژه</h3>
+
+    <iframe
+      id="aradPreview"
+      title="Project preview"
+      sandbox="allow-scripts">
+    </iframe>
+
+    <p id="aradPlayStatus">آماده اجرای کد هستی!</p>
+  `;
+
+  const target =
+    document.getElementById("projects") ||
+    document.getElementById("courseDetail") ||
+    document.querySelector("main") ||
+    document.body;
+
+  target.appendChild(section);
+
+  const get = id => document.getElementById(id);
+
+  get("aradRun").addEventListener("click", function () {
+    const html = get("aradHTML").value;
+    const css = get("aradCSS").value;
+    const js = get("aradJS").value;
+
+    const preview = get("aradPreview");
+
+    const documentCode = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <style>${css.replace(/<\/style/gi, "<\\/style")}</style>
+      </head>
+      <body>
+        ${html.replace(/<\/body/gi, "<\\/body")}
+        <script>
+          try {
+            ${js.replace(/<\/script/gi, "<\\/script")}
+          } catch (error) {
+            document.body.insertAdjacentHTML(
+              "beforeend",
+              "<pre style='color:red'></pre>"
+            );
+            document.querySelector("pre").textContent =
+              error.message;
+          }
+        <\/script>
+      </body>
+      </html>
+    `;
+
+    preview.srcdoc = documentCode;
+
+    get("aradPlayStatus").textContent =
+      "✅ پروژه اجرا شد!";
+  });
+
+  get("aradClear").addEventListener("click", function () {
+    get("aradHTML").value = "";
+    get("aradCSS").value = "";
+    get("aradJS").value = "";
+    get("aradPreview").srcdoc = "";
+    get("aradPlayStatus").textContent =
+      "ویرایشگر پاک شد.";
+  });
+
+  get("aradExample").addEventListener("click", function () {
+    get("aradHTML").value =
+      "<h1>ARAD ACADEMY</h1><p>Welcome to programming!</p>";
+
+    get("aradCSS").value =
+      "body {background:#101a35;color:#00eaff;text-align:center;padding:50px;font-family:Arial;}";
+
+    get("aradJS").value =
+      "console.log('Hello ARAD!');";
+      
+    get("aradPlayStatus").textContent =
+      "نمونه آماده بارگذاری شد.";
+  });
+
+  console.log("ARAD PLAYGROUND PART 10 READY");
+
+})();
+
+/* ==========================================
+   ARAD ACADEMY - PART 11
+   POINTS & LEADERBOARD SYSTEM
+========================================== */
+
+(function () {
+  if (document.getElementById("aradRanking")) return;
+
+  const STORAGE_KEY = "arad_ranking_v11";
+
+  let ranking = {};
+
+  try {
+    ranking = JSON.parse(
+      localStorage.getItem(STORAGE_KEY) || "{}"
+    );
+  } catch {
+    ranking = {};
+  }
+
+  function saveRanking() {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(ranking)
+    );
+  }
+
+  function currentUser() {
+    if (typeof db !== "undefined" && db.current) {
+      const user = db.users.find(
+        u => u.email === db.current
+      );
+
+      if (user) return user.email;
+    }
+
+    return null;
+  }
+
+  function getUser() {
+    const email = currentUser();
+
+    if (!email) return null;
+
+    if (!ranking[email]) {
+      ranking[email] = {
+        points: 0,
+        lessons: 0,
+        exams: 0,
+        badges: []
+      };
+    }
+
+    return ranking[email];
+  }
+
+  function level(points) {
+    if (points >= 2000) return "استاد ارشد";
+    if (points >= 1000) return "استاد";
+    if (points >= 500) return "حرفه‌ای";
+    if (points >= 200) return "متوسط";
+    return "مبتدی";
+  }
+
+  function awardPoints(amount, reason) {
+    const user = getUser();
+
+    if (!user) {
+      alert("ابتدا وارد حساب دانش‌آموزی شو.");
+      return;
+    }
+
+    user.points += amount;
+
+    saveRanking();
+    render();
+
+    alert(
+      amount + " امتیاز دریافت کردی!\n" + reason
+    );
+  }
+
+  function render() {
+    const user = getUser();
+
+    const panel = document.getElementById(
+      "aradRanking"
+    );
+
+    if (!panel) return;
+
+    if (!user) {
+      panel.innerHTML = `
+        <h2>🏆 رتبه‌بندی آکادمی اراد</h2>
+        <p>برای مشاهده امتیازات وارد حساب شو.</p>
+      `;
+      return;
+    }
+
+    const email = currentUser();
+
+    const sorted = Object.entries(ranking)
+      .sort((a, b) => b[1].points - a[1].points);
+
+    const rank = sorted.findIndex(
+      item => item[0] === email
+    ) + 1;
+
+    panel.innerHTML = `
+      <div class="arad-rank-profile">
+        <h2>🏆 مرکز افتخارات اراد</h2>
+
+        <div class="arad-rank-number">
+          ${user.points}
+        </div>
+
+        <h3>امتیاز شما</h3>
+
+        <p>سطح: ${level(user.points)}</p>
+
+        <p>رتبه شما: ${rank}</p>
+
+        <p>درس‌های امتیازدار: ${user.lessons}</p>
+
+        <p>آزمون‌های امتیازدار: ${user.exams}</p>
+      </div>
+
+      <h3>🥇 جدول برترین دانش‌آموزان</h3>
+
+      <div class="arad-leader-list">
+        ${
+          sorted.length
+            ? sorted.map((item, index) => `
+              <div class="arad-leader-item">
+                <span>
+                  ${index === 0 ? "🥇" :
+                    index === 1 ? "🥈" :
+                    index === 2 ? "🥉" :
+                    index + 1}
+                </span>
+
+                <span>
+                  ${escapeHTML(
+                    item[0].split("@")[0]
+                  )}
+                </span>
+
+                <strong>
+                  ${item[1].points} امتیاز
+                </strong>
+              </div>
+            `).join("")
+            : "<p>هنوز امتیازی ثبت نشده است.</p>"
+        }
+      </div>
+
+      <h3>🎖 نشان‌های افتخار</h3>
+
+      <div class="arad-badges">
+        ${
+          user.points >= 100
+            ? "<span>🌟 تلاشگر</span>"
+            : ""
+        }
+
+        ${
+          user.points >= 500
+            ? "<span>🔥 حرفه‌ای</span>"
+            : ""
+        }
+
+        ${
+          user.points >= 1000
+            ? "<span>👑 استاد</span>"
+            : ""
+        }
+
+        ${
+          user.points < 100
+            ? "<span>🌱 شروع یادگیری</span>"
+            : ""
+        }
+      </div>
+    `;
+  }
+
+  const style = document.createElement("style");
+
+  style.textContent = `
+    #aradRanking {
+      direction: rtl;
+      margin: 25px auto;
+      max-width: 1050px;
+      padding: 25px;
+      color: white;
+      border: 1px solid #00eaff;
+      border-radius: 22px;
+      background: rgba(8,15,35,.94);
+      box-shadow: 0 0 25px #00dfff22;
+    }
+
+    #aradRanking h2 {
+      color: #00eaff;
+      text-shadow: 0 0 12px #00eaff;
+    }
+
+    .arad-rank-profile {
+      text-align: center;
+      padding: 25px;
+      border-radius: 18px;
+      background: linear-gradient(
+        135deg,
+        #101c42,
+        #092c43
+      );
+    }
+
+    .arad-rank-number {
+      font-size: 55px;
+      font-weight: bold;
+      color: #00eaff;
+      text-shadow: 0 0 20px #00eaff;
+    }
+
+    .arad-leader-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px;
+      margin: 8px 0;
+      border: 1px solid #145c78;
+      border-radius: 12px;
+      background: #101c35;
+      flex-wrap: wrap;
+    }
+
+    .arad-leader-item strong {
+      color: #00eaff;
+    }
+
+    .arad-badges span {
+      display: inline-block;
+      padding: 12px;
+      margin: 5px;
+      border: 1px solid #00eaff;
+      border-radius: 12px;
+      color: #00eaff;
+    }
+  `;
+
+  document.head.appendChild(style);
+
+  const section = document.createElement("section");
+  section.id = "aradRanking";
+
+  const target =
+    document.getElementById("dashboardContent") ||
+    document.querySelector("main") ||
+    document.body;
+
+  target.appendChild(section);
+
+  // اتصال به تکمیل درس‌ها
+  const oldCompleteLesson = window.completeLesson;
+
+  if (
+    typeof oldCompleteLesson === "function" &&
+    !oldCompleteLesson._aradWrapped
+  ) {
+    const wrapped = function (id, index) {
+      const email = currentUser();
+      const user = getUser();
+
+      const key = "lesson_" + id + "_" + index;
+
+      if (
+        email &&
+        user &&
+        !localStorage.getItem(
+          "arad_award_" + key + "_" + email
+        )
+      ) {
+        oldCompleteLesson(id, index);
+
+        user.points += 10;
+        user.lessons++;
+
+        localStorage.setItem(
+          "arad_award_" + key + "_" + email,
+          "1"
+        );
+
+        saveRanking();
+        render();
+
+        alert("۱۰ امتیاز برای تکمیل درس گرفتی!");
+        return;
+      }
+
+      oldCompleteLesson(id, index);
+    };
+
+    wrapped._aradWrapped = true;
+    window.completeLesson = wrapped;
+  }
+
+  // اتصال به آزمون‌ها
+  const oldStartQuiz = window.startQuiz;
+
+  if (
+    typeof oldStartQuiz === "function" &&
+    !oldStartQuiz._aradWrapped
+  ) {
+    const wrappedQuiz = function (id) {
+      oldStartQuiz(id);
+    };
+
+    wrappedQuiz._aradWrapped = true;
+    window.startQuiz = wrappedQuiz;
+  }
+
+  window.aradAwardPoints = awardPoints;
+  window.aradRankingRefresh = render;
+
+  render();
+
+  console.log("ARAD PART 11 READY");
+
+})();
+
+/* ==========================================
+   ARAD ACADEMY - PART 12
+   VIDEO CLASSROOM SYSTEM
+========================================== */
+
+(function () {
+  if (document.getElementById("aradVideoClass")) return;
+
+  const KEY = "arad_video_progress_v12";
+
+  function getProgress() {
+    try {
+      return JSON.parse(localStorage.getItem(KEY) || "{}");
+    } catch {
+      return {};
+    }
+  }
+
+  function saveProgress(data) {
+    localStorage.setItem(KEY, JSON.stringify(data));
+  }
+
+  const style = document.createElement("style");
+
+  style.textContent = `
+    #aradVideoClass {
+      direction: rtl;
+      max-width: 1100px;
+      margin: 25px auto;
+      padding: 24px;
+      color: white;
+      background: rgba(7,15,35,.97);
+      border: 1px solid #00eaff;
+      border-radius: 22px;
+      box-shadow: 0 0 30px #00eaff22;
+    }
+
+    #aradVideoClass h2 {
+      color: #00eaff;
+      text-shadow: 0 0 12px #00eaff;
+    }
+
+    #aradVideoClass select,
+    #aradVideoClass input {
+      background: #101d38;
+      color: white;
+      border: 1px solid #087eaa;
+      padding: 12px;
+      border-radius: 10px;
+      margin: 8px 0;
+      max-width: 100%;
+    }
+
+    #aradVideoClass button {
+      background: linear-gradient(90deg,#0879d8,#00d9ff);
+      color: white;
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 18px;
+      margin: 6px;
+      cursor: pointer;
+    }
+
+    #aradVideoClass video {
+      width: 100%;
+      max-height: 500px;
+      background: black;
+      border: 2px solid #00eaff;
+      border-radius: 15px;
+      margin-top: 15px;
+    }
+
+    #aradVideoClass .video-panel {
+      background: #101c35;
+      border: 1px solid #145c78;
+      padding: 16px;
+      border-radius: 14px;
+      margin-top: 15px;
+    }
+
+    #aradVideoClass textarea {
+      width: 100%;
+      min-height: 100px;
+      background: #050b19;
+      color: white;
+      border: 1px solid #087eaa;
+      border-radius: 10px;
+      padding: 12px;
+      box-sizing: border-box;
+    }
+
+    #aradVideoClass .video-progress {
+      height: 8px;
+      background: #182b48;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    #aradVideoClass .video-progress span {
+      display: block;
+      height: 100%;
+      background: #00eaff;
+      width: 0%;
+    }
+  `;
+
+  document.head.appendChild(style);
+
+  const section = document.createElement("section");
+  section.id = "aradVideoClass";
+
+  section.innerHTML = `
+    <h2>🎬 کلاس آنلاین آکادمی اراد</h2>
+
+    <p>به کلاس ویدئویی اختصاصی خودت خوش آمدی.</p>
+
+    <div class="video-panel">
+      <h3>📚 انتخاب جلسه</h3>
+
+      <select id="aradVideoCourse">
+        <option value="">انتخاب دوره</option>
+      </select>
+
+      <select id="aradVideoLesson">
+        <option value="">انتخاب درس</option>
+      </select>
+
+      <input
+        type="url"
+        id="aradVideoURL"
+        placeholder="آدرس مستقیم فایل ویدئو (MP4)"
+      >
+
+      <button id="aradLoadVideo">
+        ▶ بارگذاری ویدئو
+      </button>
+    </div>
+
+    <video id="aradVideoPlayer" controls playsinline>
+      مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.
+    </video>
+
+    <div class="video-panel">
+      <h3>⏱ پیشرفت تماشا</h3>
+
+      <div class="video-progress">
+        <span id="aradVideoBar"></span>
+      </div>
+
+      <p id="aradVideoTime">هنوز ویدئویی پخش نشده است.</p>
+
+      <label>سرعت پخش:</label>
+
+      <select id="aradVideoSpeed">
+        <option value="0.5">0.5x</option>
+        <option value="0.75">0.75x</option>
+        <option value="1" selected>1x</option>
+        <option value="1.25">1.25x</option>
+        <option value="1.5">1.5x</option>
+        <option value="2">2x</option>
+      </select>
+
+      <button id="aradVideoBookmark">
+        🔖 ذخیره نشانک
+      </button>
+
+      <button id="aradVideoResume">
+        ⏩ ادامه از نشانک
+      </button>
+    </div>
+
+    <div class="video-panel">
+      <h3>📝 متن و زیرنویس درس</h3>
+
+      <textarea
+        id="aradVideoNotes"
+        placeholder="متن درس یا یادداشت خود را اینجا بنویس..."
+      ></textarea>
+
+      <input
+        type="url"
+        id="aradSubtitleURL"
+        placeholder="آدرس فایل زیرنویس VTT (اختیاری)"
+      >
+
+      <button id="aradSubtitleLoad">
+        فعال‌سازی زیرنویس
+      </button>
+
+      <button id="aradSaveNotes">
+        ذخیره یادداشت
+      </button>
+    </div>
+
+    <p id="aradVideoMessage">
+      آماده شروع کلاس هستی! 🚀
+    </p>
+  `;
+
+  const target =
+    document.getElementById("dashboardContent") ||
+    document.querySelector("main") ||
+    document.body;
+
+  target.appendChild(section);
+
+  const $ = id => document.getElementById(id);
+
+  const courses = (
+    typeof db !== "undefined" && Array.isArray(db.courses)
+  ) ? db.courses : [];
+
+  courses.forEach(course => {
+    const option = document.createElement("option");
+    option.value = course.id;
+    option.textContent = course.name;
+    $("aradVideoCourse").appendChild(option);
+  });
+
+  let activeKey = "";
+
+  $("aradVideoCourse").addEventListener("change", function () {
+    const course = courses.find(c => c.id === this.value);
+
+    $("aradVideoLesson").innerHTML =
+      '<option value="">انتخاب درس</option>';
+
+    if (!course) return;
+
+    course.chapters.forEach((chapter, ci) => {
+      chapter.lessons.forEach((lesson, li) => {
+        const option = document.createElement("option");
+        option.value = ci + ":" + li;
+        option.textContent =
+          chapter.title + " - " + lesson.title;
+
+        $("aradVideoLesson").appendChild(option);
+      });
+    });
+  });
+
+  $("aradLoadVideo").addEventListener("click", function () {
+    const courseId = $("aradVideoCourse").value;
+    const lessonValue = $("aradVideoLesson").value;
+    const url = $("aradVideoURL").value.trim();
+
+    if (!courseId || !lessonValue || !url) {
+      alert("دوره، درس و آدرس ویدئو را وارد کن.");
+      return;
+    }
+
+    try {
+      const parsed = new URL(url);
+
+      if (!["https:", "http:"].includes(parsed.protocol)) {
+        throw new Error("Invalid URL");
+      }
+    } catch {
+      alert("آدرس ویدئو معتبر نیست.");
+      return;
+    }
+
+    activeKey = courseId + "_" + lessonValue;
+
+    const progress = getProgress();
+
+    const player = $("aradVideoPlayer");
+
+    player.src = url;
+    player.load();
+
+    player.addEventListener("loadedmetadata", function restore() {
+      player.removeEventListener("loadedmetadata", restore);
+
+      const saved = progress[activeKey];
+
+      if (saved && saved.time > 0 && saved.time < player.duration) {
+        player.currentTime = saved.time;
+      }
+    });
+
+    $("aradVideoMessage").textContent =
+      "ویدئو بارگذاری شد. برای پخش دکمه Play را بزن.";
+  });
+
+  $("aradVideoPlayer").addEventListener("timeupdate", function () {
+    const player = this;
+
+    if (!activeKey || !Number.isFinite(player.duration)) return;
+
+    const progress = getProgress();
+
+    const percent =
+      player.duration ? player.currentTime / player.duration * 100 : 0;
+
+    $("aradVideoBar").style.width = percent + "%";
+
+    $("aradVideoTime").textContent =
+      Math.floor(player.currentTime) + " ثانیه از " +
+      Math.floor(player.duration) + " ثانیه";
+
+    progress[activeKey] = progress[activeKey] || {};
+
+    progress[activeKey].time = player.currentTime;
+    progress[activeKey].percent = percent;
+
+    saveProgress(progress);
+  });
+
+  $("aradVideoSpeed").addEventListener("change", function () {
+    $("aradVideoPlayer").playbackRate = Number(this.value);
+  });
+
+  $("aradVideoBookmark").addEventListener("click", function () {
+    if (!activeKey) {
+      alert("ابتدا یک ویدئو بارگذاری کن.");
+      return;
+    }
+
+    const progress = getProgress();
+
+    progress[activeKey] = progress[activeKey] || {};
+
+    progress[activeKey].bookmark =
+      $("aradVideoPlayer").currentTime;
+
+    saveProgress(progress);
+
+    $("aradVideoMessage").textContent =
+      "نشانک با موفقیت ذخیره شد. 🔖";
+  });
+
+  $("aradVideoResume").addEventListener("click", function () {
+    const progress = getProgress();
+
+    if (!activeKey || !progress[activeKey]?.bookmark) {
+      alert("نشانکی برای این ویدئو ذخیره نشده است.");
+      return;
+    }
+
+    $("aradVideoPlayer").currentTime =
+      progress[activeKey].bookmark;
+
+    $("aradVideoMessage").textContent =
+      "به محل نشانک منتقل شدی.";
+  });
+
+  $("aradSubtitleLoad").addEventListener("click", function () {
+    const url = $("aradSubtitleURL").value.trim();
+    const player = $("aradVideoPlayer");
+
+    if (!url) {
+      alert("آدرس زیرنویس را وارد کن.");
+      return;
+    }
+
+    try {
+      if (new URL(url).protocol !== "https:") {
+        throw new Error("HTTPS required");
+      }
+    } catch {
+      alert("آدرس زیرنویس HTTPS معتبر وارد کن.");
+      return;
+    }
+
+    player.querySelectorAll("track").forEach(t => t.remove());
+
+    const track = document.createElement("track");
+    track.kind = "subtitles";
+    track.label = "فارسی";
+    track.srclang = "fa";
+    track.src = url;
+    track.default = true;
+
+    player.appendChild(track);
+
+    $("aradVideoMessage").textContent =
+      "زیرنویس اضافه شد.";
+  });
+
+  $("aradSaveNotes").addEventListener("click", function () {
+    if (!activeKey) {
+      alert("ابتدا یک درس انتخاب کن.");
+      return;
+    }
+
+    const progress = getProgress();
+
+    progress[activeKey] = progress[activeKey] || {};
+
+    progress[activeKey].notes =
+      $("aradVideoNotes").value;
+
+    saveProgress(progress);
+
+    $("aradVideoMessage").textContent =
+      "یادداشت‌ها ذخیره شدند.";
+  });
+
+  $("aradVideoLesson").addEventListener("change", function () {
+    const courseId = $("aradVideoCourse").value;
+
+    if (!courseId || !this.value) return;
+
+    activeKey = courseId + "_" + this.value;
+
+    const saved = getProgress()[activeKey] || {};
+
+    $("aradVideoNotes").value = saved.notes || "";
+  });
+
+  console.log("ARAD PART 12 READY");
+
+})();
