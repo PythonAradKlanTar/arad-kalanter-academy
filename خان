@@ -1,0 +1,423 @@
+(() => {
+  "use strict";
+
+  if (window.ARAD_ACADEMY_V2) {
+    console.warn("ARAD Academy قبلاً راه‌اندازی شده است.");
+    return;
+  }
+
+  const KEY = "ARAD_ACADEMY_DATA_V2";
+
+  const read = () => {
+    try {
+      return JSON.parse(localStorage.getItem(KEY)) || {
+        courses: [],
+        students: [],
+        announcements: [],
+        settings: {}
+      };
+    } catch {
+      return {
+        courses: [],
+        students: [],
+        announcements: [],
+        settings: {}
+      };
+    }
+  };
+
+  const state = {
+    data: read(),
+    panel: null,
+    selectedCourse: null,
+    selectedChapter: null
+  };
+
+  const save = () => {
+    localStorage.setItem(KEY, JSON.stringify(state.data));
+    render();
+  };
+
+  const id = () => crypto.randomUUID();
+
+  const el = (tag, props = {}, children = []) => {
+    const node = document.createElement(tag);
+
+    Object.entries(props).forEach(([key, value]) => {
+      if (key === "className") node.className = value;
+      else if (key === "text") node.textContent = value;
+      else if (key.startsWith("on") && typeof value === "function") {
+        node.addEventListener(key.slice(2).toLowerCase(), value);
+      } else {
+        node.setAttribute(key, value);
+      }
+    });
+
+    children.forEach(child => {
+      if (child instanceof Node) node.appendChild(child);
+      else node.appendChild(document.createTextNode(String(child)));
+    });
+
+    return node;
+  };
+
+  const css = `
+    #arad-academy-v2 {
+      position:fixed;
+      inset:15px;
+      z-index:2147483000;
+      background:#0b1020;
+      color:#f2f4ff;
+      border:1px solid #635bdb;
+      border-radius:18px;
+      box-shadow:0 15px 70px #000c;
+      font:14px Tahoma,Arial;
+      overflow:auto;
+      direction:rtl;
+      padding:20px;
+    }
+    #arad-academy-v2 * {box-sizing:border-box}
+    #arad-academy-v2 h1 {font-size:24px}
+    #arad-academy-v2 h2 {font-size:19px}
+    #arad-academy-v2 input,
+    #arad-academy-v2 textarea,
+    #arad-academy-v2 select {
+      width:100%;
+      padding:12px;
+      margin:6px 0;
+      color:white;
+      background:#17223b;
+      border:1px solid #354363;
+      border-radius:9px;
+    }
+    #arad-academy-v2 button {
+      padding:11px 15px;
+      margin:5px 0;
+      border:0;
+      border-radius:9px;
+      color:white;
+      background:#6559db;
+      cursor:pointer;
+      font-weight:bold;
+    }
+    #arad-academy-v2 .secondary {background:#253653}
+    #arad-academy-v2 .danger {background:#9b3449}
+    #arad-academy-v2 .card {
+      background:#151f35;
+      border:1px solid #2b3a58;
+      border-radius:13px;
+      padding:15px;
+      margin:12px 0;
+    }
+    #arad-academy-v2 .grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      gap:12px;
+    }
+    #arad-academy-v2 .muted {color:#a9b5d1}
+    #arad-academy-v2 .number {font-size:28px;color:#61caff}
+    #arad-academy-v2 .item {
+      padding:12px;
+      margin:7px 0;
+      background:#1d2a45;
+      border-radius:9px;
+      overflow-wrap:anywhere;
+    }
+  `;
+
+  const style = el("style", {}, [
+    document.createTextNode(css)
+  ]);
+
+  const panel = el("div", {
+    id: "arad-academy-v2"
+  });
+
+  panel.appendChild(style);
+
+  document.body.appendChild(panel);
+
+  const escape = value => String(value ?? "")
+    .replace(/[&<>"']/g, char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[char]);
+
+  const button = (text, callback, cls = "") =>
+    el("button", {
+      className: cls,
+      text,
+      onclick: callback
+    });
+
+  const input = (placeholder, type = "text") =>
+    el("input", {
+      placeholder,
+      type
+    });
+
+  const heading = text => el("h2", {text});
+
+  function addCourse(title, description = "") {
+    if (!title.trim()) throw Error("عنوان دوره الزامی است.");
+
+    state.data.courses.push({
+      id: id(),
+      title: title.trim(),
+      description,
+      chapters: [],
+      createdAt: new Date().toISOString()
+    });
+
+    save();
+  }
+
+  function addChapter(courseId, title) {
+    const course = state.data.courses.find(
+      item => item.id === courseId
+    );
+
+    if (!course) throw Error("دوره پیدا نشد.");
+    if (!title.trim()) throw Error("نام فصل الزامی است.");
+
+    course.chapters.push({
+      id: id(),
+      title: title.trim(),
+      lessons: []
+    });
+
+    save();
+  }
+
+  function addLesson(chapterId, title, videoUrl = "") {
+    const chapter = state.data.courses
+      .flatMap(course => course.chapters)
+      .find(item => item.id === chapterId);
+
+    if (!chapter) throw Error("فصل پیدا نشد.");
+    if (!title.trim()) throw Error("عنوان جلسه الزامی است.");
+
+    chapter.lessons.push({
+      id: id(),
+      title: title.trim(),
+      videoUrl,
+      duration: 0,
+      free: false,
+      createdAt: new Date().toISOString()
+    });
+
+    save();
+  }
+
+  function renderCourses() {
+    const container = el("div");
+
+    state.data.courses.forEach(course => {
+      const box = el("div", {className:"item"});
+
+      box.appendChild(el("strong", {text:course.title}));
+
+      box.appendChild(el("p", {
+        className:"muted",
+        text:course.description || "بدون توضیحات"
+      }));
+
+      box.appendChild(el("p", {
+        text:`${course.chapters.length} فصل`
+      }));
+
+      course.chapters.forEach(chapter => {
+        box.appendChild(el("div", {
+          text:"📁 " + chapter.title
+        }));
+
+        chapter.lessons.forEach(lesson => {
+          box.appendChild(el("div", {
+            className:"muted",
+            text:"▶ " + lesson.title
+          }));
+        });
+      });
+
+      box.appendChild(button(
+        "حذف دوره",
+        () => {
+          if (!confirm("این دوره حذف شود؟")) return;
+
+          state.data.courses =
+            state.data.courses.filter(c => c.id !== course.id);
+
+          save();
+        },
+        "danger"
+      ));
+
+      container.appendChild(box);
+    });
+
+    return container;
+  }
+
+  function render() {
+    panel.replaceChildren(style);
+
+    const header = el("div");
+    header.appendChild(el("h1", {
+      text:"ARAD KALANTER ACADEMY"
+    }));
+
+    header.appendChild(el("p", {
+      className:"muted",
+      text:"پنل آزمایشی مدیریت آکادمی"
+    }));
+
+    header.appendChild(button(
+      "بستن پنل",
+      () => panel.remove(),
+      "danger"
+    ));
+
+    panel.appendChild(header);
+
+    const stats = el("div", {className:"grid"});
+
+    [
+      ["تعداد دوره‌ها", state.data.courses.length],
+      ["تعداد فصل‌ها", state.data.courses.reduce(
+        (sum, course) => sum + course.chapters.length, 0
+      )],
+      ["تعداد جلسات", state.data.courses.reduce(
+        (sum, course) => sum +
+          course.chapters.reduce(
+            (s, chapter) => s + chapter.lessons.length, 0
+          ), 0
+      )],
+      ["تعداد دانشجویان", state.data.students.length]
+    ].forEach(([label, value]) => {
+      const box = el("div", {className:"card"});
+      box.appendChild(el("div", {className:"muted",text:label}));
+      box.appendChild(el("div", {className:"number",text:value}));
+      stats.appendChild(box);
+    });
+
+    panel.appendChild(stats);
+
+    const courseBox = el("section", {className:"card"});
+    courseBox.appendChild(heading("مدیریت دوره‌ها"));
+
+    const courseTitle = input("عنوان دوره");
+    const courseDesc = input("توضیحات دوره");
+
+    courseBox.append(courseTitle, courseDesc);
+
+    courseBox.appendChild(button("افزودن دوره", () => {
+      try {
+        addCourse(courseTitle.value, courseDesc.value);
+      } catch(error) {
+        alert(error.message);
+      }
+    }));
+
+    panel.appendChild(courseBox);
+
+    const chapterBox = el("section", {className:"card"});
+    chapterBox.appendChild(heading("مدیریت فصل‌ها"));
+
+    const courseSelect = el("select");
+
+    state.data.courses.forEach(course => {
+      courseSelect.appendChild(el("option", {
+        value:course.id,
+        text:course.title
+      }));
+    });
+
+    const chapterTitle = input("عنوان فصل");
+
+    chapterBox.append(courseSelect, chapterTitle);
+
+    chapterBox.appendChild(button("افزودن فصل", () => {
+      try {
+        addChapter(courseSelect.value, chapterTitle.value);
+      } catch(error) {
+        alert(error.message);
+      }
+    }));
+
+    panel.appendChild(chapterBox);
+
+    const lessonBox = el("section", {className:"card"});
+    lessonBox.appendChild(heading("مدیریت جلسات و ویدئو"));
+
+    const chapterSelect = el("select");
+
+    state.data.courses.forEach(course => {
+      course.chapters.forEach(chapter => {
+        chapterSelect.appendChild(el("option", {
+          value:chapter.id,
+          text:course.title + " / " + chapter.title
+        }));
+      });
+    });
+
+    const lessonTitle = input("عنوان جلسه");
+    const videoUrl = input("لینک ویدئو");
+
+    lessonBox.append(chapterSelect, lessonTitle, videoUrl);
+
+    lessonBox.appendChild(button("افزودن جلسه", () => {
+      try {
+        addLesson(
+          chapterSelect.value,
+          lessonTitle.value,
+          videoUrl.value
+        );
+      } catch(error) {
+        alert(error.message);
+      }
+    }));
+
+    panel.appendChild(lessonBox);
+
+    const list = el("section", {className:"card"});
+    list.appendChild(heading("فهرست دوره‌ها"));
+    list.appendChild(renderCourses());
+
+    panel.appendChild(list);
+
+    const exportBox = el("section", {className:"card"});
+    exportBox.appendChild(heading("پشتیبان محلی"));
+
+    exportBox.appendChild(button("دریافت نسخه JSON", () => {
+      const blob = new Blob(
+        [JSON.stringify(state.data, null, 2)],
+        {type:"application/json"}
+      );
+
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "arad-academy-backup.json";
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }));
+
+    panel.appendChild(exportBox);
+  }
+
+  window.ARAD_ACADEMY_V2 = {
+    version:"2.0",
+    state,
+    render,
+    addCourse,
+    addChapter,
+    addLesson
+  };
+
+  render();
+
+  console.log("ARAD Academy Part 1 loaded.");
+  console.log("این نسخه فقط در همین مرورگر و به‌صورت محلی کار می‌کند.");
+})();
