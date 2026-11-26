@@ -1,0 +1,1094 @@
+ARAD-AI-2026 — FULL SOURCE CODE
+نسخه ماژولار توسعه‌یافته؛ برای اجرا فایل‌ها را با مسیرهای درج‌شده جدا کنید.
+
+========================================================================================
+FILE: .env.example
+========================================================================================
+NODE_ENV=development
+PORT=3000
+APP_URL=http://localhost:3000
+DATABASE_URL=postgresql://arad_user:change_me@localhost:5432/arad_ai
+DATABASE_SSL=false
+
+# Generate long random values. Never commit real secrets.
+JWT_SECRET=replace_with_at_least_32_random_characters
+OTP_PEPPER=replace_with_another_long_random_secret
+COOKIE_SECURE=false
+
+# Owner bootstrap. Set once, run db:init, then remove OWNER_INITIAL_PASSWORD.
+OWNER_EMAIL=owner@example.com
+OWNER_INITIAL_PASSWORD=ChangeThisImmediately_123!
+
+# SMTP required for user email OTP
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM=ARAD AI <no-reply@example.com>
+
+# OpenAI-compatible provider
+AI_API_KEY=
+AI_BASE_URL=https://api.openai.com/v1
+AI_CHAT_MODEL=gpt-4o-mini
+AI_VISION_MODEL=gpt-4o-mini
+AI_IMAGE_MODEL=gpt-image-1
+AI_TTS_MODEL=tts-1
+AI_STT_MODEL=whisper-1
+
+# Optional web search provider
+TAVILY_API_KEY=
+
+# ECHO PLUS
+ECHO_PLUS_PRICE_TOMAN=50000
+ECHO_PLUS_DEFAULT_DAYS=30
+MAX_UPLOAD_MB=12
+
+========================================================================================
+FILE: .gitignore
+========================================================================================
+node_modules/
+.env
+uploads/
+*.log
+.DS_Store
+coverage/
+
+========================================================================================
+FILE: README.txt
+========================================================================================
+ARAD-AI-2026 — راهنمای نصب و راه‌اندازی
+=======================================
+
+این بسته نسخه توسعه‌یافته و ماژولار پروژه است؛ نه سرویس میزبانی‌شده و نه محصولی که از قبل روی اینترنت فعال باشد. اتصال واقعی به مدل AI، ایمیل، پایگاه داده و سرویس جست‌وجو نیازمند کلیدها و حساب‌های معتبر شماست.
+
+نیازمندی‌ها
+-----------
+- Node.js نسخه 20 یا بالاتر
+- PostgreSQL نسخه 14 یا بالاتر
+- SMTP معتبر برای ارسال کد ورود
+- کلید API ارائه‌دهنده سازگار با OpenAI برای چت/تصویر/صوت
+- اختیاری: کلید Tavily برای جست‌وجوی وب
+
+نصب محلی
+--------
+1) ZIP را استخراج کنید.
+2) در پوشه پروژه اجرا کنید:
+   npm install
+3) فایل .env.example را به .env کپی کنید.
+4) مقادیر DATABASE_URL، JWT_SECRET، OTP_PEPPER، تنظیمات SMTP و AI_API_KEY را کامل کنید.
+5) یک دیتابیس PostgreSQL بسازید و DATABASE_URL را به آن وصل کنید.
+6) برای ساخت جدول‌ها و حساب اولیه مالک اجرا کنید:
+   npm run db:init
+7) پس از ایجاد حساب مالک، مقدار OWNER_INITIAL_PASSWORD را از محیط اجرا حذف کنید.
+8) اجرا:
+   npm start
+9) مرورگر:
+   http://localhost:3000
+
+ورود کاربران
+-------------
+کاربران عادی رمز عبور ندارند؛ ایمیل را وارد می‌کنند و کد یک‌بارمصرف ایمیل می‌گیرند.
+بدون SMTP واقعی، ارسال کد کار نمی‌کند.
+مالک از تب «ورود مالک» با ایمیل و رمز عبور استفاده می‌کند.
+رمز مالک در دیتابیس به صورت bcrypt hash ذخیره می‌شود؛ آن را در کد قرار ندهید.
+
+قابلیت‌ها
+---------
+- چت هوش مصنوعی با تاریخچه و مکالمه‌های ذخیره‌شده
+- ورود کاربر با OTP ایمیل
+- ورود مالک با رمز عبور هش‌شده
+- نقش‌های user/admin/owner و جداسازی سطح دسترسی
+- هدیه ECHO PLUS به مدت دلخواه یا دائمی توسط مالک
+- ارتقای کاربر عادی به admin توسط مالک
+- مسدودسازی کاربر توسط مالک
+- گزارش رخدادهای مدیریتی
+- تولید و ویرایش تصویر فقط برای عضو فعال ECHO PLUS
+- تحلیل فایل TXT، MD، PDF متنی و DOCX
+- تبدیل گفتار به متن و متن به گفتار (فایل‌محور)
+- جست‌وجوی وب از طریق Tavily
+
+قیمت اشتراک
+-----------
+قیمت پیش‌فرض ECHO PLUS برابر ۵۰٬۰۰۰ تومان و مدت پیش‌فرض ۳۰ روز است.
+در این نسخه درگاه پرداخت بانکی پیاده‌سازی نشده است؛ خرید آنلاین/تأیید تراکنش وجود ندارد.
+مالک می‌تواند اشتراک را دستی هدیه بدهد. برای پرداخت واقعی باید درگاه و callback امن افزوده و تست شود.
+
+محدودیت‌ها و نکات مهم
+--------------------
+- پنل مدیریتی گرافیکی کامل هنوز در رابط کاربری این نسخه ساخته نشده؛ عملیات مالک از APIهای محافظت‌شده انجام می‌شود.
+- دسترسی admin محدود به مشاهده فهرست کاربران است؛ admin نمی‌تواند مالک بسازد، رمز مالک را ببیند یا اشتراک هدیه کند.
+- گفت‌وگوی صوتی زنده نیست؛ endpointها فایل صوتی می‌گیرند/می‌سازند.
+- PDF اسکن‌شده OCR نمی‌شود؛ فقط متن قابل استخراج خوانده می‌شود.
+- نتایج جست‌وجو در ابزار مستقل نمایش داده می‌شوند و خودکار به متن چت تزریق نمی‌شوند.
+- برای ویرایش تصویر، سازگاری endpoint images.edit به ارائه‌دهنده و مدل انتخابی بستگی دارد.
+- قبل از انتشار عمومی باید HTTPS، تنظیمات کوکی امن، سیاست CSRF متناسب با معماری، محدودیت مصرف/هزینه، بکاپ، مانیتورینگ و آزمون نفوذ انجام شود.
+- کد به‌صورت خودکار روی TinyHost یا هیچ هاست دیگری نصب نمی‌شود. باید مطابق مستندات هاست Node.js و PostgreSQL تنظیم شود.
+
+APIهای اصلی
+-----------
+GET  /api/health
+POST /api/auth/request-code
+POST /api/auth/verify-code
+POST /api/auth/owner-login
+GET  /api/auth/me
+POST /api/auth/logout
+GET  /api/conversations
+POST /api/conversations
+GET  /api/conversations/:id/messages
+DELETE /api/conversations/:id
+POST /api/chat
+POST /api/images/generate             (ECHO PLUS)
+POST /api/images/edit                 (ECHO PLUS)
+POST /api/files/analyze
+POST /api/voice/transcribe
+POST /api/voice/speak
+POST /api/search
+GET  /api/subscription
+GET  /api/owner/users                 (owner)
+POST /api/owner/gift                  (owner)
+POST /api/owner/promote-admin         (owner)
+POST /api/owner/block-user            (owner)
+GET  /api/owner/audit                 (owner)
+GET  /api/owner/settings              (owner)
+GET  /api/owner/admin/users           (admin/owner)
+
+نمونه هدیه اشتراک
+-----------------
+POST /api/owner/gift
+JSON: {"userId": 12, "days": 30}
+دائمی: {"userId": 12, "duration": "permanent"}
+
+نمونه ارتقای مدیر
+-----------------
+POST /api/owner/promote-admin
+JSON: {"userId": 12}
+
+آزمون
+----
+npm test
+npm run check
+
+قبل از استفاده واقعی
+--------------------
+این نسخه در محیط مقصد شما با PostgreSQL، SMTP و کلید API واقعی end-to-end آزمایش نشده است. ابتدا در staging تست کنید و کلیدها/رمزهای واقعی را در فایل .env خارج از ZIP نگه دارید.
+
+========================================================================================
+FILE: SECURITY-CHECKLIST.txt
+========================================================================================
+چک‌لیست امنیتی پیش از انتشار ARAD AI
+====================================
+[ ] کلیدهای API و رمزها فقط در Secret/Environment Variables هاست باشند.
+[ ] رمز مالک یکتا، قوی و پس از bootstrap چرخانده شود.
+[ ] OWNER_INITIAL_PASSWORD پس از اجرای db:init حذف شود.
+[ ] HTTPS فعال و COOKIE_SECURE=true باشد.
+[ ] DATABASE_SSL مطابق ارائه‌دهنده دیتابیس تنظیم شود.
+[ ] SMTP با دامنه معتبر و SPF/DKIM/DMARC پیکربندی شود.
+[ ] بکاپ خودکار PostgreSQL و آزمون بازیابی انجام شود.
+[ ] محدودیت هزینه و نرخ درخواست AI برای هر کاربر پیاده‌سازی شود.
+[ ] سیاست نگهداری/حذف داده و رضایت کاربر تدوین شود.
+[ ] آزمون امنیتی، CSRF، XSS، دسترسی افقی و آپلود فایل انجام شود.
+[ ] درگاه پرداخت واقعی فقط با اعتبارسنجی سمت سرور و verify تراکنش افزوده شود.
+[ ] لاگ‌ها فاقد OTP، رمز، توکن و کلید API باشند.
+[ ] مانیتورینگ، هشدار خطا و health check تنظیم شود.
+این چک‌لیست جایگزین ممیزی امنیتی حرفه‌ای نیست.
+
+========================================================================================
+FILE: migrations/001_initial.sql
+========================================================================================
+CREATE TABLE IF NOT EXISTS users (
+  id BIGSERIAL PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  display_name TEXT,
+  role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user','admin','owner')),
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','blocked')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_login_at TIMESTAMPTZ
+);
+CREATE TABLE IF NOT EXISTS owner_credentials (
+  user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  password_hash TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS login_codes (
+  id BIGSERIAL PRIMARY KEY,
+  email TEXT NOT NULL,
+  code_hash TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  consumed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS login_codes_email_created_idx ON login_codes(email, created_at DESC);
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  plan TEXT NOT NULL DEFAULT 'echo_plus',
+  starts_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  ends_at TIMESTAMPTZ,
+  is_permanent BOOLEAN NOT NULL DEFAULT FALSE,
+  granted_by BIGINT REFERENCES users(id),
+  note TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS subscriptions_user_active_idx ON subscriptions(user_id, ends_at);
+CREATE TABLE IF NOT EXISTS conversations (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL DEFAULT 'گفت‌وگوی جدید',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS messages (
+  id BIGSERIAL PRIMARY KEY,
+  conversation_id BIGINT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  role TEXT NOT NULL CHECK (role IN ('user','assistant','system')),
+  content TEXT NOT NULL,
+  model TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS messages_conversation_idx ON messages(conversation_id, created_at);
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id BIGSERIAL PRIMARY KEY,
+  actor_id BIGINT REFERENCES users(id),
+  action TEXT NOT NULL,
+  target_user_id BIGINT REFERENCES users(id),
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS usage_events (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  feature TEXT NOT NULL,
+  units INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+========================================================================================
+FILE: package.json
+========================================================================================
+{
+  "name": "arad-ai-2026",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Persian-first AI assistant with ECHO PLUS membership and owner/admin controls",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "db:init": "node src/init-db.js",
+    "test": "node --test",
+    "check": "node --check src/server.js && node --check src/routes/auth.js && node --check src/routes/ai.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mammoth": "^1.8.0",
+    "multer": "^1.4.5-lts.1",
+    "openai": "^4.56.0",
+    "pdf-parse": "^1.1.1",
+    "pg": "^8.12.0",
+    "zod": "^3.23.8",
+    "nodemailer": "^6.9.14"
+  }
+}
+
+========================================================================================
+FILE: public/app.js
+========================================================================================
+const $=s=>document.querySelector(s);
+let currentConversation=null;
+async function api(url,options={}){
+  const res=await fetch('/api'+url,{credentials:'same-origin',...options});
+  const type=res.headers.get('content-type')||'';
+  if(!res.ok){let data={};try{data=type.includes('json')?await res.json():{error:await res.text()}}catch{};throw new Error(data.error||'درخواست ناموفق بود.')}
+  return type.includes('application/json')?res.json():res;
+}
+function message(text,role='assistant'){
+  const div=document.createElement('div');div.className='bubble '+role;div.textContent=text;$('#messages').append(div);$('#messages').scrollTop=$('#messages').scrollHeight;
+}
+function status(text){$('#authMessage').textContent=text}
+async function refreshMe(){
+  const data=await api('/auth/me');$('#authPanel').classList.add('hidden');$('#appPanel').classList.remove('hidden');
+  $('#userLabel').textContent=data.user.email+' · '+data.user.role;$('#logoutBtn').classList.remove('hidden');
+  $('#membershipStatus').textContent=data.echo_plus?'ECHO PLUS فعال است':'ECHO PLUS فعال نیست';
+  loadConversations();
+}
+async function loadConversations(){
+  const data=await api('/conversations');$('#conversationList').replaceChildren();
+  data.conversations.forEach(c=>{const b=document.createElement('button');b.className='conversation'+(String(c.id)===String(currentConversation)?' active':'');b.textContent=c.title;b.onclick=()=>openConversation(c.id);$('#conversationList').append(b)});
+}
+async function openConversation(id){
+  currentConversation=id;const d=await api(`/conversations/${id}/messages`);$('#messages').replaceChildren();
+  d.messages.forEach(m=>message(m.content,m.role));loadConversations();
+}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));
+  $('#userRequest').classList.toggle('hidden',b.dataset.tab!=='user');
+  $('#userVerify').classList.add('hidden');$('#ownerLogin').classList.toggle('hidden',b.dataset.tab!=='owner');status('');
+});
+$('#userRequest').onsubmit=async e=>{
+  e.preventDefault();try{const email=$('#email').value;await api('/auth/request-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});$('#userVerify').classList.remove('hidden');status('کد ارسال شد؛ صندوق ورودی و پوشه هرزنامه را بررسی کنید.')}catch(err){status(err.message)}
+};
+$('#userVerify').onsubmit=async e=>{
+  e.preventDefault();try{await api('/auth/verify-code',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:$('#email').value,code:$('#otp').value})});await refreshMe()}catch(err){status(err.message)}
+};
+$('#ownerLogin').onsubmit=async e=>{
+  e.preventDefault();try{await api('/auth/owner-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:$('#ownerEmail').value,password:$('#ownerPassword').value})});await refreshMe()}catch(err){status(err.message)}
+};
+$('#logoutBtn').onclick=async()=>{await api('/auth/logout',{method:'POST'});location.reload()};
+$('#newChat').onclick=async()=>{const d=await api('/conversations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});currentConversation=d.conversation.id;$('#messages').replaceChildren();loadConversations()};
+$('#chatForm').onsubmit=async e=>{
+  e.preventDefault();const text=$('#message').value.trim();if(!text)return;$('#message').value='';message(text,'user');
+  try{const d=await api('/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,conversationId:currentConversation})});currentConversation=d.conversationId;message(d.reply);loadConversations()}catch(err){message(err.message)}
+};
+$('#fileForm').onsubmit=async e=>{
+  e.preventDefault();const file=$('#file').files[0];if(!file)return;const fd=new FormData();fd.append('file',file);fd.append('question',$('#fileQuestion').value);
+  try{const d=await api('/files/analyze',{method:'POST',body:fd});message('تحلیل فایل:\n'+d.reply)}catch(err){message(err.message)}
+};
+$('#searchForm').onsubmit=async e=>{
+  e.preventDefault();try{const d=await api('/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:$('#searchQuery').value})});$('#toolOutput').replaceChildren();
+  d.results.forEach(r=>{const p=document.createElement('p');const a=document.createElement('a');a.href=r.url;a.target='_blank';a.rel='noopener';a.textContent=r.title;a.style.color='#9eabff';p.append(a,document.createTextNode(' — '+r.content));$('#toolOutput').append(p)})}catch(err){message(err.message)}
+};
+$('#imageForm').onsubmit=async e=>{
+  e.preventDefault();try{const d=await api('/images/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:$('#imagePrompt').value})});showImage(d.image)}catch(err){message(err.message)}
+};
+$('#editForm').onsubmit=async e=>{
+  e.preventDefault();const file=$('#editImage').files[0];if(!file){message('ابتدا تصویر را انتخاب کن.');return}const fd=new FormData();fd.append('image',file);fd.append('prompt',$('#editPrompt').value);
+  try{const d=await api('/images/edit',{method:'POST',body:fd});showImage(d.image)}catch(err){message(err.message)}
+};
+function showImage(data){
+  $('#toolOutput').replaceChildren();if(data?.url){const img=document.createElement('img');img.src=data.url;$('#toolOutput').append(img)}
+  else if(data?.b64_json){const img=document.createElement('img');img.src='data:image/png;base64,'+data.b64_json;$('#toolOutput').append(img)}
+  else $('#toolOutput').textContent='پاسخ تصویر دریافت شد، اما نشانی قابل نمایش برنگشت.';
+}
+refreshMe().catch(()=>{});
+
+========================================================================================
+FILE: public/index.html
+========================================================================================
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#10131d"><title>ARAD AI | دستیار هوشمند</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="top"><div class="brand"><span class="logo">A</span><div><b>ARAD AI</b><small>دستیار هوشمند شما</small></div></div>
+<div class="top-actions"><span id="userLabel">مهمان</span><button id="logoutBtn" class="ghost hidden">خروج</button></div></header>
+<main>
+<section id="authPanel" class="auth card">
+  <div class="eyebrow">خوش آمدید</div><h1>ورود به ARAD AI</h1>
+  <p class="muted">کاربران با کد یک‌بارمصرف ایمیل وارد می‌شوند. مالک از ورود اختصاصی استفاده می‌کند.</p>
+  <div class="tabs"><button class="tab active" data-tab="user">ورود کاربر</button><button class="tab" data-tab="owner">ورود مالک</button></div>
+  <form id="userRequest"><label>ایمیل</label><input type="email" id="email" required placeholder="name@example.com"><button class="primary">ارسال کد ورود</button></form>
+  <form id="userVerify" class="hidden"><label>کد شش‌رقمی ایمیل</label><input id="otp" inputmode="numeric" maxlength="6" required><button class="primary">تأیید و ورود</button></form>
+  <form id="ownerLogin" class="hidden"><label>ایمیل مالک</label><input id="ownerEmail" type="email" required><label>رمز عبور مالک</label><input id="ownerPassword" type="password" required><button class="primary">ورود مالک</button></form>
+  <p id="authMessage" class="notice"></p>
+</section>
+<section id="appPanel" class="layout hidden">
+  <aside class="sidebar card">
+    <button id="newChat" class="primary wide">＋ گفت‌وگوی جدید</button>
+    <h3>تاریخچه</h3><div id="conversationList"></div>
+    <div class="membership"><b>ECHO PLUS</b><p>تولید و ویرایش تصویر</p><strong>۵۰٬۰۰۰ تومان</strong><small>۳۰ روزه · هدیه توسط مالک</small><span id="membershipStatus">وضعیت: بررسی نشده</span></div>
+  </aside>
+  <section class="workspace card">
+    <div class="welcome"><div class="orb">✦</div><h1>سلام، من آراد هستم</h1><p class="muted">سؤالت رو بپرس؛ با هم پیش می‌ریم.</p></div>
+    <div id="messages" class="messages"></div>
+    <form id="chatForm" class="composer"><textarea id="message" rows="2" placeholder="پیامت رو اینجا بنویس..." required></textarea><button class="primary">ارسال</button></form>
+    <div class="tools">
+      <form id="fileForm"><label class="tool">تحلیل فایل <input type="file" id="file" accept=".txt,.md,.pdf,.docx" hidden></label><input id="fileQuestion" placeholder="سؤال درباره فایل (اختیاری)"><button>تحلیل</button></form>
+      <form id="searchForm"><input id="searchQuery" placeholder="جست‌وجوی وب"><button>جست‌وجو</button></form>
+    </div>
+    <div class="image-tools">
+      <form id="imageForm"><input id="imagePrompt" placeholder="توضیح تصویر برای ECHO PLUS"><button>تولید تصویر</button></form>
+      <form id="editForm"><input id="editPrompt" placeholder="توضیح ویرایش تصویر"><input type="file" id="editImage" accept="image/*"><button>ویرایش تصویر</button></form>
+    </div>
+    <div id="toolOutput" class="tool-output"></div>
+  </section>
+</section>
+</main>
+<footer>ARAD AI 2026 · برای استفاده واقعی، سرویس هوش مصنوعی و ایمیل باید پیکربندی شوند.</footer>
+<script src="/app.js" defer></script>
+</body></html>
+
+========================================================================================
+FILE: public/style.css
+========================================================================================
+:root{color-scheme:dark;--bg:#0b0e16;--panel:#141a27;--panel2:#1b2333;--line:#293449;--text:#edf2ff;--muted:#9ba8bf;--accent:#8b7cff;--accent2:#53d6c6}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 15% 0%,#202044 0,transparent 32%),var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif;min-height:100vh}.top{height:76px;padding:0 5vw;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:#0d111bdc;position:sticky;top:0;z-index:3;backdrop-filter:blur(12px)}.brand{display:flex;align-items:center;gap:12px}.brand small{display:block;color:var(--muted);font-size:11px;margin-top:4px}.logo{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-size:24px;font-weight:bold;color:#10131d}.top-actions{display:flex;align-items:center;gap:14px;color:var(--muted)}main{max-width:1380px;margin:34px auto;padding:0 22px}.card{background:linear-gradient(145deg,#171e2d,#111724);border:1px solid var(--line);border-radius:22px;box-shadow:0 18px 55px #0004}.auth{max-width:480px;margin:7vh auto;padding:32px}.eyebrow{color:var(--accent2);font-size:12px}.auth h1{margin:9px 0}.muted,small{color:var(--muted);line-height:1.8}.tabs{display:flex;gap:8px;margin:24px 0 18px}.tab,button,.tool{cursor:pointer}.tab{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--muted);padding:11px;border-radius:12px}.tab.active{color:white;border-color:var(--accent);background:#302c55}form label{display:block;margin:12px 0 8px;color:var(--muted);font-size:13px}input,textarea{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#0d1320;color:var(--text);outline:none;font:inherit}input:focus,textarea:focus{border-color:var(--accent)}button{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:11px 16px;border-radius:12px;font:inherit}.primary{background:linear-gradient(110deg,#7768ed,#4e9fba);border:0;color:white;font-weight:bold}.auth form button{width:100%;margin-top:15px}.ghost{background:transparent}.notice{color:var(--accent2);min-height:22px}.hidden{display:none!important}.layout{display:grid;grid-template-columns:290px 1fr;gap:20px;min-height:calc(100vh - 160px)}.sidebar{padding:18px;height:max-content;position:sticky;top:94px}.wide{width:100%}.sidebar h3{font-size:14px;color:var(--muted);margin-top:26px}.conversation{display:block;width:100%;text-align:right;margin:7px 0;background:transparent;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.conversation.active{background:#2a2c4a;border-color:#6257bd}.membership{margin-top:28px;padding:16px;border:1px solid #4b477c;background:#252443;border-radius:16px}.membership p{font-size:12px;color:var(--muted)}.membership strong,.membership small,.membership span{display:block;margin:8px 0}.membership strong{color:#c5bdff}.membership span{font-size:11px;color:var(--accent2)}.workspace{padding:22px;display:flex;flex-direction:column;min-height:680px}.welcome{text-align:center;padding:25px 0 12px}.welcome h1{font-size:25px}.orb{width:56px;height:56px;border-radius:18px;margin:auto;display:grid;place-items:center;background:linear-gradient(135deg,#7868ef,#4bd2c0);font-size:28px;color:#10131d}.messages{flex:1;min-height:240px;max-height:52vh;overflow:auto;padding:10px 4px}.bubble{max-width:85%;padding:14px 17px;border-radius:17px;margin:12px 0;white-space:pre-wrap;line-height:1.9}.bubble.user{background:#2c3150;margin-right:auto;border-bottom-right-radius:4px}.bubble.assistant{background:#202b38;margin-left:auto;border-bottom-left-radius:4px}.composer{display:flex;gap:10px;align-items:stretch}.composer textarea{resize:vertical}.composer button{min-width:92px}.tools,.image-tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}.tools form,.image-tools form{display:flex;gap:7px;align-items:center;flex:1;min-width:240px}.tools input,.image-tools input{min-width:0}.tool{padding:10px 12px;background:#202b38;border:1px solid var(--line);border-radius:11px;font-size:12px}.tool-output{line-height:1.8;color:var(--muted);overflow-wrap:anywhere}.tool-output img{max-width:min(100%,500px);border-radius:14px;margin:12px 0}footer{text-align:center;color:#65728a;font-size:11px;padding:22px}@media(max-width:850px){.layout{grid-template-columns:1fr}.sidebar{position:static}.workspace{min-height:70vh}.messages{max-height:none}.auth{margin:3vh auto}.top{padding:0 18px}}
+
+========================================================================================
+FILE: src/config.js
+========================================================================================
+const required = (name) => {
+  const value = process.env[name];
+  if (!value) throw new Error(`Missing required environment variable: ${name}`);
+  return value;
+};
+module.exports = {
+  port: Number(process.env.PORT || 3000),
+  nodeEnv: process.env.NODE_ENV || 'development',
+  databaseUrl: required('DATABASE_URL'),
+  databaseSsl: process.env.DATABASE_SSL === 'true',
+  jwtSecret: required('JWT_SECRET'),
+  otpPepper: required('OTP_PEPPER'),
+  cookieSecure: process.env.COOKIE_SECURE === 'true',
+  appUrl: process.env.APP_URL || 'http://localhost:3000',
+  ownerEmail: (process.env.OWNER_EMAIL || '').toLowerCase(),
+  ownerInitialPassword: process.env.OWNER_INITIAL_PASSWORD || '',
+  echoPrice: Number(process.env.ECHO_PLUS_PRICE_TOMAN || 50000),
+  echoDays: Number(process.env.ECHO_PLUS_DEFAULT_DAYS || 30),
+  maxUploadMb: Number(process.env.MAX_UPLOAD_MB || 12)
+};
+
+========================================================================================
+FILE: src/db.js
+========================================================================================
+const { Pool } = require('pg');
+const config = require('./config');
+const pool = new Pool({
+  connectionString: config.databaseUrl,
+  ssl: config.databaseSsl ? { rejectUnauthorized: true } : false,
+  max: 15,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000
+});
+pool.on('error', (err) => console.error('Unexpected PostgreSQL pool error:', err.message));
+module.exports = {
+  query: (text, params) => pool.query(text, params),
+  getClient: () => pool.connect(),
+  close: () => pool.end()
+};
+
+========================================================================================
+FILE: src/init-db.js
+========================================================================================
+require('dotenv').config();
+const fs=require('fs');
+const path=require('path');
+const bcrypt=require('bcryptjs');
+const db=require('./db');
+const config=require('./config');
+(async()=>{
+  try{
+    const sql=fs.readFileSync(path.join(__dirname,'../migrations/001_initial.sql'),'utf8');
+    await db.query(sql);
+    if(config.ownerEmail && config.ownerInitialPassword){
+      const hash=await bcrypt.hash(config.ownerInitialPassword,12);
+      const client=await db.getClient();
+      try{
+        await client.query('BEGIN');
+        const u=await client.query(
+          `INSERT INTO users(email,role) VALUES($1,'owner')
+           ON CONFLICT(email) DO UPDATE SET role='owner' RETURNING id`,[config.ownerEmail]);
+        await client.query(
+          `INSERT INTO owner_credentials(user_id,password_hash) VALUES($1,$2)
+           ON CONFLICT(user_id) DO UPDATE SET password_hash=EXCLUDED.password_hash,updated_at=NOW()`,
+          [u.rows[0].id,hash]);
+        await client.query('COMMIT');
+        console.log('Owner account initialized. Remove OWNER_INITIAL_PASSWORD from environment now.');
+      }catch(e){await client.query('ROLLBACK');throw e;}finally{client.release();}
+    } else {
+      console.log('Database schema initialized. Set OWNER_EMAIL and OWNER_INITIAL_PASSWORD to bootstrap owner.');
+    }
+  }catch(e){console.error(e);process.exitCode=1;}
+  finally{await db.close();}
+})();
+
+========================================================================================
+FILE: src/middleware/auth.js
+========================================================================================
+const jwt = require('jsonwebtoken');
+const config = require('../config');
+const db = require('../db');
+function tokenFrom(req) {
+  const header = req.headers.authorization || '';
+  return req.cookies?.arad_token || (header.startsWith('Bearer ') ? header.slice(7) : null);
+}
+async function requireAuth(req, res, next) {
+  try {
+    const token = tokenFrom(req);
+    if (!token) return res.status(401).json({ error: 'ابتدا وارد حساب شوید.' });
+    const payload = jwt.verify(token, config.jwtSecret);
+    const result = await db.query('SELECT id,email,display_name,role,status FROM users WHERE id=$1', [payload.sub]);
+    const user = result.rows[0];
+    if (!user || user.status !== 'active') return res.status(401).json({ error: 'حساب کاربری فعال نیست.' });
+    req.user = user;
+    next();
+  } catch { return res.status(401).json({ error: 'نشست نامعتبر یا منقضی شده است.' }); }
+}
+function requireOwner(req, res, next) {
+  if (req.user?.role !== 'owner') return res.status(403).json({ error: 'فقط مالک اصلی مجاز است.' });
+  next();
+}
+function requireAdmin(req, res, next) {
+  if (!['admin','owner'].includes(req.user?.role)) return res.status(403).json({ error: 'دسترسی مدیر لازم است.' });
+  next();
+}
+module.exports = { requireAuth, requireOwner, requireAdmin };
+
+========================================================================================
+FILE: src/middleware/echo.js
+========================================================================================
+const db = require('../db');
+async function requireEchoPlus(req, res, next) {
+  try {
+    const result = await db.query(
+      `SELECT 1 FROM subscriptions
+       WHERE user_id=$1 AND plan='echo_plus'
+       AND (is_permanent=true OR ends_at > NOW())
+       AND starts_at <= NOW()
+       ORDER BY is_permanent DESC, ends_at DESC NULLS LAST LIMIT 1`,
+      [req.user.id]
+    );
+    if (!result.rowCount) return res.status(402).json({
+      code: 'ECHO_PLUS_REQUIRED',
+      error: 'این قابلیت مخصوص اعضای ECHO PLUS است.',
+      price_toman: Number(process.env.ECHO_PLUS_PRICE_TOMAN || 50000)
+    });
+    next();
+  } catch (err) { next(err); }
+}
+module.exports = { requireEchoPlus };
+
+========================================================================================
+FILE: src/routes/ai.js
+========================================================================================
+const router = require('express').Router();
+const multer = require('multer');
+const { requireAuth } = require('../middleware/auth');
+const { requireEchoPlus } = require('../middleware/echo');
+const { generateImage, editImage, transcribe, speak, chat } = require('../services/ai');
+const { extractText } = require('../services/files');
+const db = require('../db');
+const config = require('../config');
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: config.maxUploadMb * 1024 * 1024 },
+  fileFilter: (req,file,cb) => {
+    const allowed = /\.(txt|md|pdf|docx|png|jpg|jpeg|webp|mp3|wav|m4a)$/i.test(file.originalname);
+    cb(allowed ? null : new Error('پسوند فایل پشتیبانی نمی‌شود.'), allowed);
+  }
+});
+router.post('/images/generate', requireAuth, requireEchoPlus, async (req,res,next)=>{
+  try{
+    const prompt=String(req.body.prompt||'').trim();
+    if(!prompt || prompt.length>4000) return res.status(400).json({error:'توضیح تصویر را وارد کنید.'});
+    const image=await generateImage(prompt);
+    await db.query('INSERT INTO usage_events(user_id,feature) VALUES($1,$2)',[req.user.id,'image_generate']);
+    res.json({image});
+  }catch(e){next(e);}
+});
+router.post('/images/edit', requireAuth, requireEchoPlus, upload.single('image'), async (req,res,next)=>{
+  try{
+    if(!req.file) return res.status(400).json({error:'تصویر را انتخاب کنید.'});
+    const prompt=String(req.body.prompt||'').trim();
+    const image=await editImage(req.file.buffer,req.file.mimetype,prompt);
+    await db.query('INSERT INTO usage_events(user_id,feature) VALUES($1,$2)',[req.user.id,'image_edit']);
+    res.json({image});
+  }catch(e){next(e);}
+});
+router.post('/files/analyze', requireAuth, upload.single('file'), async (req,res,next)=>{
+  try{
+    if(!req.file) return res.status(400).json({error:'فایل را انتخاب کنید.'});
+    const extracted=await extractText(req.file);
+    if(!extracted.trim()) return res.status(400).json({error:'متنی از فایل استخراج نشد. PDF اسکن‌شده نیازمند OCR است.'});
+    const question=String(req.body.question||'این فایل را خلاصه و نکات مهم آن را استخراج کن.');
+    const result=await chat([
+      {role:'system',content:'فقط بر اساس متن فایل پاسخ بده. اگر اطلاعاتی در فایل نیست، مشخص کن.'},
+      {role:'user',content:`سؤال: ${question}\n\nمتن فایل:\n${extracted.slice(0,50000)}`}
+    ]);
+    res.json({reply:result.text,model:result.model});
+  }catch(e){next(e);}
+});
+router.post('/voice/transcribe', requireAuth, upload.single('audio'), async (req,res,next)=>{
+  try{
+    if(!req.file) return res.status(400).json({error:'فایل صوتی را انتخاب کنید.'});
+    const result=await transcribe(req.file.buffer,req.file.originalname);
+    res.json({text:result.text});
+  }catch(e){next(e);}
+});
+router.post('/voice/speak', requireAuth, async (req,res,next)=>{
+  try{
+    const text=String(req.body.text||'').slice(0,4000);
+    if(!text) return res.status(400).json({error:'متنی برای تبدیل به صدا وارد کنید.'});
+    const audio=await speak(text);
+    res.set('Content-Type','audio/mpeg').send(audio);
+  }catch(e){next(e);}
+});
+module.exports=router;
+
+========================================================================================
+FILE: src/routes/auth.js
+========================================================================================
+const router = require('express').Router();
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
+const config = require('../config');
+const db = require('../db');
+const { hashOtp, cleanEmail, isEmail, safeEqual } = require('../utils');
+const { sendLoginCode } = require('../services/mailer');
+const { requireAuth } = require('../middleware/auth');
+
+const codeLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 5, standardHeaders: true, legacyHeaders: false });
+function issueSession(res, user) {
+  const token = jwt.sign({ sub: String(user.id), role: user.role }, config.jwtSecret, { expiresIn: '7d' });
+  res.cookie('arad_token', token, {
+    httpOnly: true, secure: config.cookieSecure, sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000, path: '/'
+  });
+  return token;
+}
+router.post('/request-code', codeLimiter, async (req, res, next) => {
+  try {
+    const email = cleanEmail(req.body.email);
+    if (!isEmail(email)) return res.status(400).json({ error: 'ایمیل معتبر وارد کنید.' });
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    await db.query(
+      `INSERT INTO login_codes(email,code_hash,expires_at)
+       VALUES($1,$2,NOW()+INTERVAL '10 minutes')`,
+      [email, hashOtp(code)]
+    );
+    await sendLoginCode(email, code);
+    res.json({ ok: true, message: 'کد ورود به ایمیل شما ارسال شد.' });
+  } catch (err) { next(err); }
+});
+router.post('/verify-code', codeLimiter, async (req, res, next) => {
+  const client = await db.getClient();
+  try {
+    const email = cleanEmail(req.body.email);
+    const code = String(req.body.code || '').trim();
+    if (!isEmail(email) || !/^\d{6}$/.test(code)) return res.status(400).json({ error: 'ایمیل یا کد نامعتبر است.' });
+    await client.query('BEGIN');
+    const found = await client.query(
+      `SELECT * FROM login_codes WHERE email=$1 AND consumed_at IS NULL
+       ORDER BY created_at DESC LIMIT 1 FOR UPDATE`, [email]
+    );
+    const row = found.rows[0];
+    if (!row || new Date(row.expires_at) < new Date() || row.attempts >= 5 || !safeEqual(row.code_hash, hashOtp(code))) {
+      if (row) await client.query('UPDATE login_codes SET attempts=attempts+1 WHERE id=$1', [row.id]);
+      await client.query('COMMIT');
+      return res.status(400).json({ error: 'کد اشتباه یا منقضی شده است.' });
+    }
+    await client.query('UPDATE login_codes SET consumed_at=NOW() WHERE id=$1', [row.id]);
+    let userResult = await client.query(
+      `INSERT INTO users(email) VALUES($1)
+       ON CONFLICT(email) DO UPDATE SET last_login_at=NOW()
+       RETURNING id,email,display_name,role,status`, [email]
+    );
+    const user = userResult.rows[0];
+    if (user.status !== 'active' || user.role === 'owner') {
+      await client.query('ROLLBACK');
+      return res.status(403).json({ error: 'برای این حساب از روش ورود مالک استفاده کنید یا با پشتیبانی تماس بگیرید.' });
+    }
+    await client.query('COMMIT');
+    issueSession(res, user);
+    res.json({ ok: true, user });
+  } catch (err) { await client.query('ROLLBACK'); next(err); }
+  finally { client.release(); }
+});
+router.post('/owner-login', codeLimiter, async (req, res, next) => {
+  try {
+    const email = cleanEmail(req.body.email);
+    const result = await db.query(
+      `SELECT u.id,u.email,u.display_name,u.role,u.status,c.password_hash
+       FROM users u JOIN owner_credentials c ON c.user_id=u.id
+       WHERE u.email=$1 AND u.role='owner'`, [email]
+    );
+    const owner = result.rows[0];
+    if (!owner || owner.status !== 'active' || !(await bcrypt.compare(String(req.body.password || ''), owner.password_hash))) {
+      return res.status(401).json({ error: 'ایمیل یا رمز مالک نادرست است.' });
+    }
+    const user = { id: owner.id, email: owner.email, display_name: owner.display_name, role: owner.role };
+    issueSession(res, user);
+    res.json({ ok: true, user });
+  } catch (err) { next(err); }
+});
+router.get('/me', requireAuth, async (req, res) => {
+  const sub = await db.query(
+    `SELECT is_permanent,ends_at FROM subscriptions WHERE user_id=$1
+     AND starts_at<=NOW() AND (is_permanent OR ends_at>NOW())
+     ORDER BY is_permanent DESC,ends_at DESC NULLS LAST LIMIT 1`, [req.user.id]
+  );
+  res.json({ user: req.user, echo_plus: Boolean(sub.rowCount), subscription: sub.rows[0] || null });
+});
+router.post('/logout', (req, res) => {
+  res.clearCookie('arad_token', { path: '/' });
+  res.json({ ok: true });
+});
+module.exports = router;
+
+========================================================================================
+FILE: src/routes/chat.js
+========================================================================================
+const router = require('express').Router();
+const db = require('../db');
+const { chat } = require('../services/ai');
+const { requireAuth } = require('../middleware/auth');
+
+router.get('/conversations', requireAuth, async (req,res,next) => {
+  try {
+    const r = await db.query(
+      `SELECT c.id,c.title,c.created_at,c.updated_at,
+       (SELECT content FROM messages m WHERE m.conversation_id=c.id ORDER BY id DESC LIMIT 1) AS last_message
+       FROM conversations c WHERE c.user_id=$1 ORDER BY c.updated_at DESC LIMIT 100`, [req.user.id]
+    );
+    res.json({ conversations: r.rows });
+  } catch(e){next(e);}
+});
+router.post('/conversations', requireAuth, async (req,res,next) => {
+  try {
+    const title = String(req.body.title || 'گفت‌وگوی جدید').slice(0,120);
+    const r = await db.query('INSERT INTO conversations(user_id,title) VALUES($1,$2) RETURNING *',[req.user.id,title]);
+    res.json({ conversation:r.rows[0] });
+  } catch(e){next(e);}
+});
+router.get('/conversations/:id/messages', requireAuth, async (req,res,next) => {
+  try {
+    const own = await db.query('SELECT id FROM conversations WHERE id=$1 AND user_id=$2',[req.params.id,req.user.id]);
+    if(!own.rowCount) return res.status(404).json({error:'گفت‌وگو پیدا نشد.'});
+    const r=await db.query('SELECT id,role,content,model,created_at FROM messages WHERE conversation_id=$1 ORDER BY id',[req.params.id]);
+    res.json({messages:r.rows});
+  }catch(e){next(e);}
+});
+router.post('/chat', requireAuth, async (req,res,next) => {
+  try {
+    const prompt=String(req.body.message||'').trim();
+    let conversationId=req.body.conversationId;
+    if(!prompt || prompt.length>20000) return res.status(400).json({error:'متن پیام خالی یا بیش از حد طولانی است.'});
+    if(conversationId){
+      const own=await db.query('SELECT id FROM conversations WHERE id=$1 AND user_id=$2',[conversationId,req.user.id]);
+      if(!own.rowCount) return res.status(404).json({error:'گفت‌وگو پیدا نشد.'});
+    } else {
+      const c=await db.query('INSERT INTO conversations(user_id,title) VALUES($1,$2) RETURNING id',[req.user.id,prompt.slice(0,70)]);
+      conversationId=c.rows[0].id;
+    }
+    await db.query('INSERT INTO messages(conversation_id,role,content) VALUES($1,$2,$3)',[conversationId,'user',prompt]);
+    const history=await db.query(
+      `SELECT role,content FROM messages WHERE conversation_id=$1 ORDER BY id DESC LIMIT 20`,[conversationId]
+    );
+    const messages=[
+      {role:'system',content:'تو دستیار هوشمند ARAD AI هستی. به فارسی روان پاسخ بده مگر کاربر زبان دیگری بخواهد. اگر پاسخ را نمی‌دانی، صادقانه بگو و اطلاعات نساز.'},
+      ...history.rows.reverse()
+    ];
+    const answer=await chat(messages);
+    await db.query('INSERT INTO messages(conversation_id,role,content,model) VALUES($1,$2,$3,$4)',[conversationId,'assistant',answer.text,answer.model]);
+    await db.query('UPDATE conversations SET updated_at=NOW() WHERE id=$1',[conversationId]);
+    await db.query('INSERT INTO usage_events(user_id,feature) VALUES($1,$2)',[req.user.id,'chat']);
+    res.json({conversationId,reply:answer.text,model:answer.model});
+  }catch(e){next(e);}
+});
+router.delete('/conversations/:id', requireAuth, async (req,res,next)=>{
+  try{
+    const r=await db.query('DELETE FROM conversations WHERE id=$1 AND user_id=$2',[req.params.id,req.user.id]);
+    if(!r.rowCount) return res.status(404).json({error:'گفت‌وگو پیدا نشد.'});
+    res.json({ok:true});
+  }catch(e){next(e);}
+});
+module.exports=router;
+
+========================================================================================
+FILE: src/routes/owner.js
+========================================================================================
+const router=require('express').Router();
+const db=require('../db');
+const {requireAuth,requireOwner,requireAdmin}=require('../middleware/auth');
+const config=require('../config');
+router.use(requireAuth);
+
+router.get('/users',requireOwner,async(req,res,next)=>{
+  try{
+    const r=await db.query(
+      `SELECT u.id,u.email,u.display_name,u.role,u.status,u.created_at,
+       EXISTS(SELECT 1 FROM subscriptions s WHERE s.user_id=u.id AND s.starts_at<=NOW()
+       AND (s.is_permanent OR s.ends_at>NOW())) AS echo_plus
+       FROM users u ORDER BY u.created_at DESC LIMIT 500`);
+    res.json({users:r.rows});
+  }catch(e){next(e);}
+});
+router.post('/gift',requireOwner,async(req,res,next)=>{
+  const client=await db.getClient();
+  try{
+    const userId=Number(req.body.userId);
+    const permanent=req.body.duration==='permanent';
+    const days=Number(req.body.days||config.echoDays);
+    if(!Number.isInteger(userId)||userId<1||(!permanent&&(!Number.isInteger(days)||days<1||days>3650)))
+      return res.status(400).json({error:'شناسه کاربر یا مدت اشتراک نامعتبر است.'});
+    await client.query('BEGIN');
+    const user=await client.query('SELECT id FROM users WHERE id=$1 FOR UPDATE',[userId]);
+    if(!user.rowCount){await client.query('ROLLBACK');return res.status(404).json({error:'کاربر پیدا نشد.'});}
+    await client.query(
+      `INSERT INTO subscriptions(user_id,starts_at,ends_at,is_permanent,granted_by,note)
+       VALUES($1,NOW(),CASE WHEN $2 THEN NULL ELSE NOW()+($3||' days')::interval END,$2,$4,'هدیه مالک')`,
+      [userId,permanent,days,req.user.id]);
+    await client.query('INSERT INTO audit_logs(actor_id,action,target_user_id,metadata) VALUES($1,$2,$3,$4)',
+      [req.user.id,'gift_echo_plus',userId,{permanent,days}]);
+    await client.query('COMMIT');
+    res.json({ok:true,message:'اشتراک ECHO PLUS هدیه داده شد.'});
+  }catch(e){await client.query('ROLLBACK');next(e);}
+  finally{client.release();}
+});
+router.post('/promote-admin',requireOwner,async(req,res,next)=>{
+  try{
+    const id=Number(req.body.userId);
+    if(!Number.isInteger(id)||id<1) return res.status(400).json({error:'شناسه نامعتبر است.'});
+    const r=await db.query(`UPDATE users SET role='admin' WHERE id=$1 AND role='user' RETURNING id,email,role`,[id]);
+    if(!r.rowCount) return res.status(404).json({error:'کاربر عادی پیدا نشد.'});
+    await db.query('INSERT INTO audit_logs(actor_id,action,target_user_id) VALUES($1,$2,$3)',[req.user.id,'promote_admin',id]);
+    res.json({ok:true,user:r.rows[0]});
+  }catch(e){next(e);}
+});
+router.post('/block-user',requireOwner,async(req,res,next)=>{
+  try{
+    const id=Number(req.body.userId);
+    if(!Number.isInteger(id)||id<1) return res.status(400).json({error:'شناسه نامعتبر است.'});
+    const r=await db.query(`UPDATE users SET status='blocked' WHERE id=$1 AND role<>'owner' RETURNING id,email,status`,[id]);
+    if(!r.rowCount) return res.status(404).json({error:'کاربر قابل مسدودسازی پیدا نشد.'});
+    await db.query('INSERT INTO audit_logs(actor_id,action,target_user_id) VALUES($1,$2,$3)',[req.user.id,'block_user',id]);
+    res.json({ok:true,user:r.rows[0]});
+  }catch(e){next(e);}
+});
+router.get('/audit',requireOwner,async(req,res,next)=>{
+  try{
+    const r=await db.query(
+      `SELECT a.id,a.action,a.target_user_id,a.metadata,a.created_at,u.email AS actor_email
+       FROM audit_logs a LEFT JOIN users u ON u.id=a.actor_id ORDER BY a.id DESC LIMIT 200`);
+    res.json({logs:r.rows});
+  }catch(e){next(e);}
+});
+router.get('/admin/users',requireAdmin,async(req,res,next)=>{
+  try{
+    const r=await db.query(`SELECT id,email,role,status,created_at FROM users ORDER BY created_at DESC LIMIT 200`);
+    res.json({users:r.rows});
+  }catch(e){next(e);}
+});
+router.get('/settings',requireOwner,async(req,res)=>{
+  res.json({echo_plus_price_toman:config.echoPrice,default_days:config.echoDays,features:{
+    image_generation:'echo_plus',image_editing:'echo_plus',chat:'all_active_users',
+    file_analysis:'all_active_users',voice:'all_active_users',web_search:'all_active_users'
+  }});
+});
+module.exports=router;
+
+========================================================================================
+FILE: src/routes/search.js
+========================================================================================
+const router=require('express').Router();
+const {requireAuth}=require('../middleware/auth');
+router.post('/',requireAuth,async(req,res,next)=>{
+  try{
+    if(!process.env.TAVILY_API_KEY) return res.status(503).json({error:'جست‌وجوی وب فعال نشده؛ TAVILY_API_KEY را تنظیم کنید.'});
+    const query=String(req.body.query||'').trim();
+    if(!query || query.length>500) return res.status(400).json({error:'عبارت جست‌وجو معتبر نیست.'});
+    const response=await fetch('https://api.tavily.com/search',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({api_key:process.env.TAVILY_API_KEY,query,search_depth:'basic',max_results:5})
+    });
+    if(!response.ok) throw new Error(`Search provider error: ${response.status}`);
+    const data=await response.json();
+    res.json({results:(data.results||[]).map(x=>({title:x.title,url:x.url,content:x.content}))});
+  }catch(e){next(e);}
+});
+module.exports=router;
+
+========================================================================================
+FILE: src/server.js
+========================================================================================
+require('dotenv').config();
+const express=require('express');
+const helmet=require('helmet');
+const cookieParser=require('cookie-parser');
+const rateLimit=require('express-rate-limit');
+const path=require('path');
+const config=require('./config');
+const authRoutes=require('./routes/auth');
+const chatRoutes=require('./routes/chat');
+const aiRoutes=require('./routes/ai');
+const searchRoutes=require('./routes/search');
+const ownerRoutes=require('./routes/owner');
+const {requireAuth}=require('./middleware/auth');
+
+const app=express();
+app.disable('x-powered-by');
+app.use(helmet({
+  crossOriginResourcePolicy:{policy:'cross-origin'},
+  contentSecurityPolicy:{
+    directives:{
+      defaultSrc:["'self'"],
+      scriptSrc:["'self'"],
+      styleSrc:["'self'","'unsafe-inline'"],
+      imgSrc:["'self'","data:","blob:"],
+      connectSrc:["'self'"],
+      mediaSrc:["'self'","blob:"]
+    }
+  }
+}));
+app.use(express.json({limit:'1mb'}));
+app.use(express.urlencoded({extended:false,limit:'1mb'}));
+app.use(cookieParser());
+app.use('/api',rateLimit({windowMs:60*1000,limit:120,standardHeaders:true,legacyHeaders:false}));
+app.get('/api/health',(req,res)=>res.json({ok:true,service:'ARAD AI',time:new Date().toISOString()}));
+app.use('/api/auth',authRoutes);
+app.use('/api',chatRoutes);
+app.use('/api',aiRoutes);
+app.use('/api/search',searchRoutes);
+app.use('/api/owner',ownerRoutes);
+app.get('/api/subscription',requireAuth,async(req,res,next)=>{
+  try{
+    const db=require('./db');
+    const r=await db.query(
+      `SELECT is_permanent,ends_at FROM subscriptions WHERE user_id=$1 AND starts_at<=NOW()
+       AND (is_permanent OR ends_at>NOW()) ORDER BY is_permanent DESC,ends_at DESC NULLS LAST LIMIT 1`,
+      [req.user.id]);
+    res.json({active:Boolean(r.rowCount),subscription:r.rows[0]||null,price_toman:config.echoPrice,default_days:config.echoDays});
+  }catch(e){next(e);}
+});
+app.use(express.static(path.join(__dirname,'../public'),{maxAge:config.nodeEnv==='production'?'1h':0}));
+app.use((err,req,res,next)=>{
+  console.error(`[${new Date().toISOString()}]`,err.stack||err);
+  if(res.headersSent)return next(err);
+  const status=err.status|| (err.name==='MulterError'?400:500);
+  res.status(status).json({error:status>=500?'خطای داخلی سرور رخ داد.':err.message||'درخواست نامعتبر است.'});
+});
+app.listen(config.port,()=>console.log(`ARAD AI listening on port ${config.port}`));
+
+========================================================================================
+FILE: src/services/ai.js
+========================================================================================
+const OpenAI = require('openai');
+let client;
+function getClient() {
+  if (!process.env.AI_API_KEY) throw new Error('AI_API_KEY تنظیم نشده است.');
+  if (!client) client = new OpenAI({
+    apiKey: process.env.AI_API_KEY,
+    baseURL: process.env.AI_BASE_URL || 'https://api.openai.com/v1'
+  });
+  return client;
+}
+async function chat(messages) {
+  const result = await getClient().chat.completions.create({
+    model: process.env.AI_CHAT_MODEL || 'gpt-4o-mini',
+    messages,
+    temperature: 0.7
+  });
+  return { text: result.choices?.[0]?.message?.content || '', model: result.model };
+}
+async function generateImage(prompt) {
+  const result = await getClient().images.generate({
+    model: process.env.AI_IMAGE_MODEL || 'gpt-image-1',
+    prompt,
+    size: '1024x1024'
+  });
+  return result.data?.[0] || null;
+}
+async function editImage(buffer, mimeType, prompt) {
+  const result = await getClient().images.edit({
+    model: process.env.AI_IMAGE_MODEL || 'gpt-image-1',
+    image: new File([buffer], 'source-image', { type: mimeType }),
+    prompt,
+    size: '1024x1024'
+  });
+  return result.data?.[0] || null;
+}
+async function transcribe(buffer, filename) {
+  return getClient().audio.transcriptions.create({
+    file: new File([buffer], filename),
+    model: process.env.AI_STT_MODEL || 'whisper-1'
+  });
+}
+async function speak(text) {
+  const result = await getClient().audio.speech.create({
+    model: process.env.AI_TTS_MODEL || 'tts-1',
+    voice: 'alloy',
+    input: text
+  });
+  return Buffer.from(await result.arrayBuffer());
+}
+module.exports = { chat, generateImage, editImage, transcribe, speak };
+
+========================================================================================
+FILE: src/services/files.js
+========================================================================================
+const pdfParse = require('pdf-parse');
+const mammoth = require('mammoth');
+async function extractText(file) {
+  const name = file.originalname.toLowerCase();
+  if (name.endsWith('.txt') || name.endsWith('.md')) return file.buffer.toString('utf8');
+  if (name.endsWith('.pdf')) return (await pdfParse(file.buffer)).text;
+  if (name.endsWith('.docx')) return (await mammoth.extractRawText({ buffer: file.buffer })).value;
+  throw new Error('فرمت پشتیبانی نمی‌شود. TXT، MD، PDF و DOCX مجاز هستند.');
+}
+module.exports = { extractText };
+
+========================================================================================
+FILE: src/services/mailer.js
+========================================================================================
+const nodemailer = require('nodemailer');
+let transporter;
+function getTransport() {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    throw new Error('SMTP is not configured. Set SMTP_HOST, SMTP_USER and SMTP_PASS.');
+  }
+  if (!transporter) transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT || 587),
+    secure: process.env.SMTP_SECURE === 'true',
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+  });
+  return transporter;
+}
+async function sendLoginCode(email, code) {
+  await getTransport().sendMail({
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    to: email,
+    subject: 'کد ورود به ARAD AI',
+    text: `کد ورود شما: ${code}\nاین کد تا ۱۰ دقیقه معتبر است. اگر شما درخواست نداده‌اید، این پیام را نادیده بگیرید.`,
+    html: `<div dir="rtl" style="font-family:Tahoma,sans-serif"><h2>ورود به ARAD AI</h2><p>کد یک‌بارمصرف شما:</p><h1 style="letter-spacing:6px">${code}</h1><p>اعتبار: ۱۰ دقیقه</p></div>`
+  });
+}
+module.exports = { sendLoginCode };
+
+========================================================================================
+FILE: src/utils.js
+========================================================================================
+const crypto = require('crypto');
+const config = require('./config');
+function hashOtp(code) {
+  return crypto.createHmac('sha256', config.otpPepper).update(String(code)).digest('hex');
+}
+function safeEqual(a, b) {
+  const aa = Buffer.from(String(a)); const bb = Buffer.from(String(b));
+  return aa.length === bb.length && crypto.timingSafeEqual(aa, bb);
+}
+function cleanEmail(email) {
+  return String(email || '').trim().toLowerCase();
+}
+function isEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254;
+}
+module.exports = { hashOtp, safeEqual, cleanEmail, isEmail };
+
+========================================================================================
+FILE: tests/utils.test.js
+========================================================================================
+const test=require('node:test');
+const assert=require('node:assert/strict');
+process.env.DATABASE_URL='postgresql://test:test@localhost:5432/test';
+process.env.JWT_SECRET='test_secret_123456789012345678901234';
+process.env.OTP_PEPPER='test_pepper_123456789012345678901';
+const {cleanEmail,isEmail,hashOtp}=require('../src/utils');
+test('email normalization',()=>assert.equal(cleanEmail('  A@B.COM '),'a@b.com'));
+test('email validation',()=>{assert.equal(isEmail('a@b.com'),true);assert.equal(isEmail('bad'),false)});
+test('otp hashes are stable and opaque',()=>{assert.equal(hashOtp('123456'),hashOtp('123456'));assert.notEqual(hashOtp('123456'),'123456')});
